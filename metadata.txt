@@ -9,9 +9,9 @@
 
 
 [general]
-name=MapServer Tile Index Viewer
+name=Tile Index Viewer
 qgisMinimumVersion=1.0
-description=shows a preview for each tile and allows to open raster layer
+description= allows to open raster layers in tile index with right-click action in map canvas and icon/menu entry
 version=0.1
 
 # end of mandatory metadata

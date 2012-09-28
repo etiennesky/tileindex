@@ -21,9 +21,9 @@
  This script initializes the plugin, making it known to QGIS.
 """
 def name():
-    return "MapServer Tile Index Viewer"
+    return "Tile Index Viewer"
 def description():
-    return "shows a preview for each tile and allows to open raster layer"
+    return "allows to open raster layers in tile index with right-click action in map canvas and icon/menu entry"
 def version():
     return "Version 0.1"
 def icon():

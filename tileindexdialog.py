@@ -21,7 +21,10 @@
 """
 
 from PyQt4 import QtCore, QtGui
+from PyQt4.QtCore import QSettings, QVariant
+
 from ui_tileindex import Ui_TileIndex
+
 # create the dialog for zoom to point
 class TileIndexDialog(QtGui.QDialog):
     def __init__(self):
@@ -29,3 +32,25 @@ class TileIndexDialog(QtGui.QDialog):
         # Set up the user interface from Designer.
         self.ui = Ui_TileIndex()
         self.ui.setupUi(self)
+
+        s = QSettings()
+        self.ui.checkBoxContext.setChecked(s.value('TileIndexPlugin/contextMenu', True).toBool())
+        self.ui.groupBoxAttribute.setChecked(s.value('TileIndexPlugin/attribute', False).toBool())
+        self.ui.lineEditAttribute.setText(s.value('TileIndexPlugin/attributeStr', '').toString())
+
+    def accept(self):
+        s = QSettings()
+        if not self.ui.checkBoxContext.isChecked():
+            s.setValue('TileIndexPlugin/contextMenu', False)
+        else:
+            s.remove('TileIndexPlugin/contextMenu')
+        if self.ui.groupBoxAttribute.isChecked():
+            s.setValue('TileIndexPlugin/attribute', True)
+        else:
+            s.setValue('TileIndexPlugin/attribute', False)
+        attrStr = self.ui.lineEditAttribute.text();
+        if not attrStr.isNull():
+            s.setValue('TileIndexPlugin/attributeStr', QVariant(attrStr))
+        else:
+            s.remove('TileIndexPlugin/attributeStr')
+        QtGui.QDialog.accept(self)
