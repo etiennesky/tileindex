@@ -34,21 +34,28 @@ class TileIndexDialog(QtGui.QDialog):
         self.ui.setupUi(self)
 
         s = QSettings()
+        self.ui.spinBoxWidth.setValue(s.value('TileIndexPlugin/previewWidth', 1000).toInt()[0])
         self.ui.checkBoxContext.setChecked(s.value('TileIndexPlugin/contextMenu', True).toBool())
+        self.ui.checkBoxTransparent.setChecked(s.value('TileIndexPlugin/transparentFix', True).toBool())
         self.ui.groupBoxAttribute.setChecked(s.value('TileIndexPlugin/attribute', False).toBool())
         self.ui.lineEditAttribute.setText(s.value('TileIndexPlugin/attributeStr', '').toString())
 
     def accept(self):
         s = QSettings()
+        s.setValue('TileIndexPlugin/previewWidth', QVariant(self.ui.spinBoxWidth.value()))
         if not self.ui.checkBoxContext.isChecked():
             s.setValue('TileIndexPlugin/contextMenu', False)
         else:
             s.remove('TileIndexPlugin/contextMenu')
+        if not self.ui.checkBoxTransparent.isChecked():
+            s.setValue('TileIndexPlugin/transparentFix', False)
+        else:
+            s.remove('TileIndexPlugin/transparentFix')
         if self.ui.groupBoxAttribute.isChecked():
             s.setValue('TileIndexPlugin/attribute', True)
         else:
             s.setValue('TileIndexPlugin/attribute', False)
-        attrStr = self.ui.lineEditAttribute.text();
+        attrStr = self.ui.lineEditAttribute.text()
         if not attrStr.isNull():
             s.setValue('TileIndexPlugin/attributeStr', QVariant(attrStr))
         else:

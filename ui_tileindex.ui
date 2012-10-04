@@ -6,32 +6,43 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>233</width>
-    <height>155</height>
+    <width>309</width>
+    <height>207</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>TileIndex</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="2" column="0" colspan="2">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Preview width</string>
      </property>
     </widget>
    </item>
-   <item row="0" column="0" colspan="2">
+   <item row="0" column="1">
+    <widget class="QSpinBox" name="spinBoxWidth">
+     <property name="maximum">
+      <number>10000</number>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="2">
     <widget class="QCheckBox" name="checkBoxContext">
      <property name="text">
-      <string>Add right-click context menu on map</string>
+      <string>Add right-click context menu to canvas  map</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="0">
+   <item row="2" column="0" colspan="2">
+    <widget class="QCheckBox" name="checkBoxTransparent">
+     <property name="text">
+      <string>Set white pixels transparent (bugfix for QGIS &lt; 1.9)</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0" colspan="2">
     <widget class="QGroupBox" name="groupBoxAttribute">
      <property name="title">
       <string>Location attribute</string>
@@ -46,11 +57,11 @@
       <item>
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>Look for raster filenames in these
-attributes, in addtion to 'location'</string>
+         <string>Look for raster filenames in these attributes
+(in addtion to 'location')</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignCenter</set>
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -62,6 +73,16 @@ attributes, in addtion to 'location'</string>
        </widget>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item row="4" column="0" colspan="2">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
     </widget>
    </item>
   </layout>

@@ -23,7 +23,7 @@
 def name():
     return "Tile Index Viewer"
 def description():
-    return "allows to open raster layers in tile index with right-click action in map canvas and icon/menu entry"
+    return "shows a preview of MapServer tile index rasters and allows to open raster layers"
 def version():
     return "Version 0.1"
 def icon():

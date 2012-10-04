@@ -31,7 +31,7 @@ TRANSLATIONS =
 
 PLUGINNAME = tileindex
 
-PY_FILES = tileindex.py tileindexdialog.py __init__.py
+PY_FILES = tileindex.py tileindexdialog.py __init__.py tileindexutil.py tileindexfillsymbollayer.py
 
 EXTRAS = icon.png 
 
