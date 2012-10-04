@@ -26,6 +26,8 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import iface
 
+from ui_tileindexrenderwidgetbase import Ui_TileIndexRenderWidgetBase
+
 # Import the code for utils
 import tileindexutil
 
@@ -67,6 +69,7 @@ class PixmapFillSymbolLayer(QgsFillSymbolLayerV2):
                                   ct.transform(QgsPoint(bbox.xMaximum(),bbox.yMinimum())))
             bbox = QRect(bbox.xMinimum(),bbox.yMinimum(),bbox.width(),bbox.height())
 
+            #painter.drawPixmap(points.boundingRect().toRect(),self.pixmap)
             painter.drawPixmap(bbox,self.pixmap)
             
         # draw border (selection color if selected)
@@ -101,16 +104,25 @@ class PixmapFillSymbolLayerMetadata(QgsSymbolLayerV2AbstractMetadata):
 
 class TileIndexRenderer(QgsFeatureRendererV2):
 
-    def __init__(self, layer, width=0, attrId=None, attrStr=None):
+    def __init__(self, layer, width=0, attrId=None, attrStr=None, pixmaps=dict(), showLabels=True, clone=False):
         QgsFeatureRendererV2.__init__(self, "TileIndexRenderer")
 
-        self.layerPath = QFileInfo(layer.publicSource()).dir().path()
-        self.layer = layer
+        self.symbolOk = True
+        self.showLabels = showLabels
+
         if width == 0:
             self.width = tileindexutil.tileindexutil.previewWidth
         else:
             self.width = width
 
+        # get layerPath
+        self.layerPath = QFileInfo(layer.publicSource()).dir().path()
+        self.layer = layer
+        if not QFileInfo(self.layerPath).exists():
+            print("layer %s does not exist" % self.layerPath)
+            self.layerPath = None
+
+        # get attribute where filename is stored
         if attrId is None or attrStr is None:
             (self.attrId, self.attrStr) = tileindexutil.tileindexutil.checkLayerAttribute(layer, False)
         else:
@@ -118,15 +130,23 @@ class TileIndexRenderer(QgsFeatureRendererV2):
             self.attrStr = attrStr
         if self.attrId is None or self.attrId == -1:
             print("location attribute not found")
+            self.symbolOk = False
 
-        if not QFileInfo(self.layerPath).exists():
-            print("layer %s does not exist" % self.layerPath)
-            self.layerPath = None
+        # add label using old label interface when object is first created
+        print("setting up label")
+        label = self.layer.label()
+        label.setLabelField(QgsLabel.Text, self.attrId)
+        if not self.showLabels:
+            self.layer.enableLabels(self.showLabels)
+        if not clone:
+            labelAttr = label.labelAttributes()
+            labelAttr.setSize(12, QgsLabelAttributes.PointUnits)
+            self.layer.enableLabels(self.showLabels)
 
-        self.pixmaps = dict() # map with key=fileName and value=pixmap
+        # setup pixmap dict and symbols
+        self.pixmaps = pixmaps # map with key=fileName and value=pixmap
         self.pixmapSymbol = QgsFillSymbolV2()
         self.defaultSymbol = QgsSymbolV2.defaultSymbol(QGis.Polygon)
-        self.symbolOk = False
 
     def symbolForFeature(self, feature):
 
@@ -169,6 +189,10 @@ class TileIndexRenderer(QgsFeatureRendererV2):
     def stopRender(self, context):
         if self.symbolOk:
             self.pixmapSymbol.stopRender(context)
+            if self.showLabels and not self.layer.hasLabelsEnabled():
+                self.layer.enableLabels(True)
+                self.layer.drawLabels(context)
+                self.layer.enableLabels(False)
         else:
             self.defaultSymbol.stopRender(context)
         pass
@@ -177,7 +201,7 @@ class TileIndexRenderer(QgsFeatureRendererV2):
         return [ self.attrStr ]
   
     def clone(self):
-        return TileIndexRenderer(self.layer, self.width, self.attrId, self.attrStr)
+        return TileIndexRenderer(self.layer, self.width, self.attrId, self.attrStr, self.pixmaps, self.showLabels, True)
 
     def setWidth(self,width):
         if self.width != width:
@@ -192,7 +216,7 @@ class TileIndexRenderer(QgsFeatureRendererV2):
 
 
 
-class TileIndexRendererWidget(QgsRendererV2Widget):
+class TileIndexRendererWidget(QgsRendererV2Widget,Ui_TileIndexRenderWidgetBase):
     def __init__(self, layer, style, renderer):
         QgsRendererV2Widget.__init__(self, layer, style)
         if renderer is None or renderer.type() != "TileIndexRenderer":
@@ -201,26 +225,18 @@ class TileIndexRendererWidget(QgsRendererV2Widget):
             self.r = renderer
 
         # setup UI
-        self.spinBoxWidth = QSpinBox()
-        self.spinBoxWidth.setMaximum(10000)
+        self.setupUi(self)
         self.spinBoxWidth.setValue(self.r.width)
-
-        self.comboBoxAttr = QComboBox()
         provider = layer.dataProvider()
         for i in provider.fields():
             self.comboBoxAttr.addItem(provider.fields()[i].name())
         if self.r.attrId is not None and self.r.attrId > 0:
             self.comboBoxAttr.setCurrentIndex(self.r.attrId)
-
-        self.grid = QGridLayout()
-        self.grid.addWidget(QLabel(self.tr("Preview width")),0,0)
-        self.grid.addWidget(self.spinBoxWidth,0,1)
-        self.grid.addWidget(QLabel(self.tr("Location attribute")),1,0)
-        self.grid.addWidget(self.comboBoxAttr,1,1)
-        self.setLayout(self.grid)
-
+        # workaround that we can't activate show labels in UI
+        self.checkBoxShowLabels.setChecked(self.r.showLabels)
         self.connect(self.spinBoxWidth, SIGNAL("editingFinished()"), self.setWidth)
-        self.connect(self.comboBoxAttr, SIGNAL("currentIndexChanged (const QString&)"), self.setLocationAttribute)
+        self.connect(self.comboBoxAttr, SIGNAL("currentIndexChanged(const QString&)"), self.setLocationAttribute)
+        self.connect(self.checkBoxShowLabels, SIGNAL("toggled(bool)"), self.setShowLabels)
 
     def setWidth(self):
         if self.r.type() == "TileIndexRenderer":
@@ -229,6 +245,10 @@ class TileIndexRendererWidget(QgsRendererV2Widget):
     def setLocationAttribute(self):
         if self.r.type() == "TileIndexRenderer":
             self.r.setLocationAttribute(self.comboBoxAttr.currentIndex(),self.comboBoxAttr.currentText())
+
+    def setShowLabels(self,checked):
+        if self.r.type() == "TileIndexRenderer":
+            self.r.showLabels = checked
 
     def renderer(self):
         return self.r

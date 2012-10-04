@@ -23,7 +23,7 @@ PLUGIN_UPLOAD = $(CURDIR)/plugin_upload.py
 # Makefile for a PyQGIS plugin 
 
 # translation
-SOURCES = tileindex.py ui_tileindex.py __init__.py tileindexdialog.py
+SOURCES = tileindex.py ui_tileindex.py __init__.py ui_tileindexdialog.py tileindexrenderwidgetbase.py
 #TRANSLATIONS = i18n/tileindex_en.ts
 TRANSLATIONS = 
 
@@ -35,7 +35,7 @@ PY_FILES = tileindex.py tileindexdialog.py __init__.py tileindexutil.py tileinde
 
 EXTRAS = icon.png 
 
-UI_FILES = ui_tileindex.py
+UI_FILES = ui_tileindex.py ui_tileindexrenderwidgetbase.py
 
 RESOURCE_FILES = resources_rc.py
 

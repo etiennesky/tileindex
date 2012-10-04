@@ -226,14 +226,14 @@ class TileIndexUtil(QObject):
         else:
 
             size = QSize(width,width * float(rlayer.height())/float(rlayer.width()))
-            if int(QGis.QGIS_VERSION[2]) > 8: # for QGIS > 1.8
+            
+            if int(QGis.QGIS_VERSION[2]) and "previewAsPixmap2" in dir(rlayer) > 8: # for QGIS > 1.8
+                # with qgis > 1.8 (master) set background as transparent
                 pixmap = rlayer.previewAsPixmap(size,Qt.transparent)
             else:
                 pixmap = QPixmap(size)
                 rlayer.thumbnailAsPixmap(pixmap)
-
-                # add transparency where there are white pixels
-                # it would be better to modify thumbnailAsPixmap so that background is transparent instead of white
+                # with qgis <= 1.8 add transparency where there are white pixels
                 if self.transparentFix:
                     mask = pixmap.createMaskFromColor(QColor(255, 255, 255), Qt.MaskInColor)
                     pixmap.setMask(mask)
