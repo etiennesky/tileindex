@@ -224,14 +224,20 @@ class TileIndexUtil(QObject):
         if rlayer is None or not rlayer.isValid():
                 print("raster %s is invalid" % fileName)
         else:
-            pixmap = QPixmap(width,width * float(rlayer.height())/float(rlayer.width()))
-            rlayer.thumbnailAsPixmap(pixmap)
 
-            # add transparency where there are white pixels
-            # it would be better to modify thumbnailAsPixmap so that background is transparent instead of white
-            if self.transparentFix:
-                mask = pixmap.createMaskFromColor(QColor(255, 255, 255), Qt.MaskInColor)
-                pixmap.setMask(mask)
+            size = QSize(width,width * float(rlayer.height())/float(rlayer.width()))
+            if int(QGis.QGIS_VERSION[2]) > 8: # for QGIS > 1.8
+                pixmap = rlayer.previewAsPixmap(size,Qt.transparent)
+            else:
+                pixmap = QPixmap(size)
+                rlayer.thumbnailAsPixmap(pixmap)
+
+                # add transparency where there are white pixels
+                # it would be better to modify thumbnailAsPixmap so that background is transparent instead of white
+                if self.transparentFix:
+                    mask = pixmap.createMaskFromColor(QColor(255, 255, 255), Qt.MaskInColor)
+                    pixmap.setMask(mask)
+
         return pixmap
 
 
