@@ -12,21 +12,22 @@
 name=Tile Index Viewer
 qgisMinimumVersion=1.0
 description= shows a preview of MapServer tile index rasters and allows to open raster layers
-version=0.1
+version=0.2
 
 # end of mandatory metadata
 
 # Optional items:
 
 # Uncomment the following line and add your changelog entries:
-# changelog=
-
+changelog=
+ 0.1 : initial version
+ 0.2 : add legend (TOC) menu entry, update to 1.9 API
 # tags are comma separated with spaces allowed
 tags=tileindex
 
-homepage=
-tracker=
-repository=
+homepage=http://hub.qgis.org/projects/tileindex/
+tracker=http://hub.qgis.org/projects/tileindex/issues
+repository=http://hub.qgis.org/projects/tileindex/repository
 icon=icon.png
 # experimental flag
 experimental=True

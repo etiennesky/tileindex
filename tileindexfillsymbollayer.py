@@ -55,7 +55,7 @@ class PixmapFillSymbolLayer(QgsFillSymbolLayerV2):
 
     def renderPolygon(self, points, rings, context):
         if rings is not None:
-            print('polygon with rings not supported, ignoring inner rings')
+            print('TileIndex plugin : polygon with rings not supported, ignoring inner rings')
 
         painter = context.renderContext().painter()    
 
@@ -119,7 +119,7 @@ class TileIndexRenderer(QgsFeatureRendererV2):
         self.layerPath = QFileInfo(layer.publicSource()).dir().path()
         self.layer = layer
         if not QFileInfo(self.layerPath).exists():
-            print("layer %s does not exist" % self.layerPath)
+            print("TileIndex plugin : layer %s does not exist" % self.layerPath)
             self.layerPath = None
 
         # get attribute where filename is stored
@@ -129,11 +129,10 @@ class TileIndexRenderer(QgsFeatureRendererV2):
             self.attrId = attrId
             self.attrStr = attrStr
         if self.attrId is None or self.attrId == -1:
-            print("location attribute not found")
+            print("TileIndex plugin : location attribute not found")
             self.symbolOk = False
 
         # add label using old label interface when object is first created
-        print("setting up label")
         label = self.layer.label()
         label.setLabelField(QgsLabel.Text, self.attrId)
         if not self.showLabels:
@@ -155,17 +154,24 @@ class TileIndexRenderer(QgsFeatureRendererV2):
             return self.defaultSymbol
 
         # get fileName for feature
-        attrMap = feature.attributeMap()
-        if not self.attrId in attrMap:
-            return self.defaultSymbol
-        fileName = attrMap[self.attrId].toString()
+        if QGis.QGIS_VERSION_INT >= 10900:
+            # this has not been tested when attribute is missing, but shouldn't get here anyway
+            fileName = feature.attribute(self.attrStr)
+            if fileName == QVariant():
+                return self.defaultSymbol
+            fileName = fileName.toString()
+        else:
+            attrMap = feature.attributeMap()
+            if not self.attrId in attrMap:
+                return self.defaultSymbol
+            fileName = attrMap[self.attrId].toString()
         if QFileInfo(fileName).isRelative():
             if self.layerPath is None:
-                print("tile has relative path %s but tileindex path is unknown..." % fileName)
+                print("TileIndex plugin : tile has relative path %s but tileindex path is unknown..." % fileName)
                 return self.defaultSymbol
             fileName = QString(self.layerPath + QDir.separator() + fileName) 
         if not QFileInfo(fileName).isFile():
-            print("got invalid raster %s for feature #%d, attribute %s" % (fileName,feature.id(),self.attrStr))
+            print("TileIndex plugin : got invalid raster %s for feature #%d, attribute %s" % (fileName,feature.id(),self.attrStr))
             return self.defaultSymbol
 
         # create pixmap if needed and add to pixmaps map
@@ -198,6 +204,8 @@ class TileIndexRenderer(QgsFeatureRendererV2):
         pass
     
     def usedAttributes(self):
+        if self.attrStr is None:
+            return []
         return [ self.attrStr ]
   
     def clone(self):

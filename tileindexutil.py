@@ -80,27 +80,30 @@ class TileIndexUtil(QObject):
 
             # get attribute id which contains "location" (or user-defined attribute)
             provider = layer.dataProvider()
-            for i in provider.fields():
-                #if provider.fields()[i].name() == "location":
+            if QGis.QGIS_VERSION_INT >= 10900:
+                fields = range(provider.fields().count())
+            else:
+                fields = provider.fields()
+            for i in fields:
                 if provider.fields()[i].name() in self.locationAttr:
                     fieldId = i
                     fieldStr = provider.fields()[i].name()
                     break
             if fieldId == -1:
-                print("did not find a location attribute in layer")                    
+                print("TileIndex plugin : did not find a location attribute in layer")                    
                 return (-1,None)
 
             # make sure there is at least 1 selected tile (if requested)
             if checkFeatures:
                 featList = layer.selectedFeatures()
                 if len(featList) == 0: 
-                    print("layer has no selected features")
+                    print("TileIndex plugin : layer has no selected features")
                     return (-1,None)
 
             return (fieldId,fieldStr)
 
-        else:
-            print("layer not a vector layer")
+#        else:
+#            print("layer not a vector layer")
 
         return (-1,None)
 
@@ -117,30 +120,39 @@ class TileIndexUtil(QObject):
         if not QFileInfo(layerPath).exists():
             layerPath = None
         
-        # get feature list, depending on selected flag - is there not an automatic way to loop with same logic?
+        # get filenames in file
+        files1 = []
         feat = QgsFeature()
         if selected:
-            selection = layer.selectedFeatures()
+            for feat in layer.selectedFeatures():
+                if QGis.QGIS_VERSION_INT >= 10900:
+                    fileName = feat.attribute(indexStr).toString()
+                else:
+                    fileName = feat.attributeMap()[index].toString()
+                files1.append(fileName)
         else:
             selection = []
-            provider = layer.dataProvider()
-            provider.select(provider.attributeIndexes())
-            while provider.nextFeature(feat):
-                selection.append(feat)
+            if QGis.QGIS_VERSION_INT >= 10900:
+                for feat in layer.getFeatures():
+                    files1.append(feat.attribute(indexStr).toString())
+            else:
+                provider = layer.dataProvider()
+                provider.select(provider.attributeIndexes())
+                while provider.nextFeature(feat):
+                    files1.append(feat.attributeMap()[index].toString())
 
-        # now loop over selection and build file list
+        # now loop over files and build actual file list, including prefix
         files = []
-        for feat in selection:
-            fileName = feat.attributeMap()[index].toString()
+        for fileName in files1:
             fileInfo = QFileInfo(fileName)
             if fileInfo.isRelative():
                 if layerPath is None:
-                    print("tile has relative path %s but tileindex path is unknown..." % fileName)
+                    print("TileIndex plugin : tile has relative path %s but tileindex path is unknown..." % fileName)
                     continue
                 fileName = layerPath + QDir.separator() + fileName
                 fileInfo.setFile(fileName)
             if not fileInfo.exists():
-                print("raster file %s does not exist..." % fileName)
+                print("TileIndex plugin : raster file %s does not exist..." % fileName)
                 continue
             files.append(fileName)
         
@@ -149,33 +161,48 @@ class TileIndexUtil(QObject):
         else:
             return files
 
-    # this method will add the selected tile raster files to map registry
-    def addSelectedTiles(self, layer):
-        files = self.getRasterFilenames(layer, True)
-        if files is None or len(files)==0:
-            return 0
+    # this method will add the given raster files to map registry
+    def addTiles(self, layer, files):
         count = 0
         for fileName in files:
             fileInfo = QFileInfo(fileName)
             rlayer = QgsRasterLayer(fileName, fileInfo.baseName())
             if rlayer is None:
-                print("raster file %s could not be loaded..." % fileName)
+                print("TileIndex plugin : raster file %s could not be loaded..." % fileName)
                 continue
-            QgsMapLayerRegistry.instance().addMapLayer(rlayer)
+            QgsMapLayerRegistry.instance().addMapLayers([rlayer])
             count = count + 1
                     
-        #print("%d tile rasters added" % count)
-
-        # restore active layer - unfortunately this does not show in the legend...
-        #if count > 0:
-        #    iface.setActiveLayer(layer)
+        # restore active layer if qgis >= 1.9
+        if ( count > 0 ) and ( QGis.QGIS_VERSION_INT >= 10900 ) :
+                iface.legendInterface().setCurrentLayer(layer)
 
         return count
 
 
+    # this method will add the selected tile raster files to map registry
+    def addSelectedTiles(self, layer):
+        files = self.getRasterFilenames(layer, True)
+        if files is None or len(files)==0:
+            return 0
+        return self.addTiles(layer, files)
+
+
+    # this method will add all tile raster files to map registry
+    def addAllTiles(self, layer):
+        files = self.getRasterFilenames(layer, False)
+        if files is None or len(files)==0:
+            return 0
+        return self.addTiles(layer, files)
+
+
     def showPreview(self,layer):
 
-        # make sure file exists
+        # don't do anything if this is not a tileindex file
+        (index,indexStr) = self.checkLayerAttribute(layer, False)
+        if index == -1:
+            return
+
         layerPath = QFileInfo(layer.publicSource()).dir().path()
         if QFileInfo(layerPath).exists():
             #renderer = TileIndexRenderer(fieldId, fieldStr, layer, 500)
@@ -187,7 +214,7 @@ class TileIndexUtil(QObject):
 
     # intercept map canvas right mouse clicks
     def eventFilter(self, obj, event):
-        if event is None or self is None:
+        if event is None or self is None or QEvent is None:
             return False
         if event.type() == QEvent.ContextMenu:
             layer = iface.activeLayer()
@@ -197,14 +224,18 @@ class TileIndexUtil(QObject):
                 globalPos = iface.mapCanvas().mapToGlobal(event.pos())
                 myMenu = QMenu()
                 str1 = self.tr("Add selected tile raster layer(s)")
+                str3 = self.tr("Add all tile raster layer(s)")
                 str2 = self.tr("Show tile previews in map")
                 if len(layer.selectedFeatures()) != 0: 
                     myMenu.addAction(str1)
+                myMenu.addAction(str3)
                 myMenu.addAction(str2)
                 selectedAction = myMenu.exec_(globalPos)
                 if selectedAction:
                     if selectedAction.text() == str1:
                         count = self.addSelectedTiles( iface.activeLayer() )
+                    elif selectedAction.text() == str3:
+                        self.addAllTiles( iface.activeLayer() )
                     elif selectedAction.text() == str2:
                         self.showPreview(layer)
                     else:
@@ -219,16 +250,14 @@ class TileIndexUtil(QObject):
         rlayer = None
 
         if QFileInfo(fileName).isFile:
-            print("reading raster %s" % fileName)
+            print("TileIndex plugin : reading raster %s" % fileName)
             rlayer = QgsRasterLayer(fileName, QFileInfo(fileName).baseName())
         if rlayer is None or not rlayer.isValid():
-                print("raster %s is invalid" % fileName)
+                print("TileIndex plugin : raster %s is invalid" % fileName)
         else:
-
             size = QSize(width,width * float(rlayer.height())/float(rlayer.width()))
-            
-            if int(QGis.QGIS_VERSION[2]) and "previewAsPixmap2" in dir(rlayer) > 8: # for QGIS > 1.8
-                # with qgis > 1.8 (master) set background as transparent
+            if ( QGis.QGIS_VERSION_INT >= 10900 ) and ( "previewAsPixmap" in dir(rlayer) ):
+                # with qgis >= 1.9 (master) set background as transparent
                 pixmap = rlayer.previewAsPixmap(size,Qt.transparent)
             else:
                 pixmap = QPixmap(size)
