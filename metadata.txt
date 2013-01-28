@@ -13,6 +13,8 @@ name=Tile Index Viewer
 qgisMinimumVersion=1.0
 description= shows a preview of MapServer tile index rasters and allows to open raster layers
 version=0.2
+author=Etienne Tourigny
+email=etourigny.dev@gmail.com
 
 # end of mandatory metadata
 

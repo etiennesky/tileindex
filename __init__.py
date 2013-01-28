@@ -30,6 +30,12 @@ def icon():
     return "icon.png"
 def qgisMinimumVersion():
     return "1.0"
+def author():
+  return "Etienne Tourigny"
+def author():
+  return "Etienne Tourigny"
+def email():
+  return "etourigny.dev@gmail.com"
 def classFactory(iface):
     # load TileIndex class from file TileIndex
     from tileindex import TileIndex
