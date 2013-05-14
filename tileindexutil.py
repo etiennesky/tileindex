@@ -85,7 +85,7 @@ class TileIndexUtil(QObject):
             else:
                 fields = provider.fields()
             for i in fields:
-                if provider.fields()[i].name() in self.locationAttr:
+                if str(provider.fields()[i].name()).lower() in self.locationAttr:
                     fieldId = i
                     fieldStr = provider.fields()[i].name()
                     break
@@ -170,12 +170,16 @@ class TileIndexUtil(QObject):
             if rlayer is None:
                 print("TileIndex plugin : raster file %s could not be loaded..." % fileName)
                 continue
-            QgsMapLayerRegistry.instance().addMapLayers([rlayer])
+            QgsMapLayerRegistry.instance().addMapLayer(rlayer)
             count = count + 1
                     
         # restore active layer if qgis >= 1.9
-        if ( count > 0 ) and ( QGis.QGIS_VERSION_INT >= 10900 ) :
+        if count > 0:
+            if QGis.QGIS_VERSION_INT >= 10900:
                 iface.legendInterface().setCurrentLayer(layer)
+            else:
+                iface.setActiveLayer(layer)
+                
 
         return count
 

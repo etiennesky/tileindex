@@ -1,5 +1,9 @@
 <RCC>
     <qresource prefix="/plugins/tileindex" >
-        <file>icon.png</file>
+        <file>icon/icon.png</file>
+        <file>icon/mActionAddImage.png</file>
+        <file>icon/mActionAddRasterLayer.png</file>
+        <file>icon/mActionMapTips.png</file>
+        <file>icon/settings.png</file>
     </qresource>
 </RCC>

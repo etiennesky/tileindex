@@ -25,7 +25,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from qgis.core import *
 
-# Initialize Qt resources from file resources.py
+# Initialize Qt resources from file resources_rc.py
 import resources_rc
 # Import the code for the dialog
 from tileindexdialog import TileIndexDialog
@@ -59,16 +59,17 @@ class TileIndex(QObject):
 
             if qVersion() > '4.3.3':
                 QCoreApplication.installTranslator(self.translator)
-  
-
+        
     def initGui(self):
         # Create action that will start plugin configuration
-        self.action_dlg = QAction(u"Preferences", self.iface.mainWindow())
-        self.action_add_sel_tiles = QAction(QIcon(":/plugins/tileindex/icon.png"), \
-            u"Add selected tile raster layer(s)", self.iface.mainWindow())
-        self.action_add_all_tiles = QAction(QIcon(":/plugins/tileindex/icon.png"), \
-            u"Add all tile raster layer(s)", self.iface.mainWindow())
-        self.action_show_preview = QAction(u"Show tile previews in map", self.iface.mainWindow())
+        self.action_dlg = QAction(QIcon(":/plugins/tileindex/icon/settings.png"), \
+                                  u"Preferences", self.iface.mainWindow())
+        self.action_add_sel_tiles = QAction(QIcon(":/plugins/tileindex/icon/mActionAddImage.png"), \
+                                            u"Add selected tile raster layer(s)", self.iface.mainWindow())
+        self.action_add_all_tiles = QAction(QIcon(":/plugins/tileindex/icon/mActionAddRasterLayer.png"), \
+                                            u"Add all tile raster layer(s)", self.iface.mainWindow())
+        self.action_show_preview = QAction(QIcon(":/plugins/tileindex/icon/mActionMapTips.png"), \
+                                           u"Show tile previews in map", self.iface.mainWindow())
         # connect the action to the run method
         QObject.connect(self.action_dlg, SIGNAL("triggered()"), self.run_dlg)
         QObject.connect(self.action_add_sel_tiles, SIGNAL("triggered()"), self.run_add_sel_tiles)
@@ -81,7 +82,6 @@ class TileIndex(QObject):
         self.iface.addPluginToMenu(u"&Tile Index", self.action_add_sel_tiles)
         self.iface.addPluginToMenu(u"&Tile Index", self.action_add_all_tiles)
         self.iface.addPluginToMenu(u"&Tile Index", self.action_show_preview)
-
 
         if QGis.QGIS_VERSION_INT >= 10900:
             self.legend.addLegendLayerAction(self.action_add_sel_tiles, "Tile Index", "tileindex/addSelTiles", QgsMapLayer.VectorLayer, False)
@@ -139,7 +139,6 @@ class TileIndex(QObject):
     def run_add_all_tiles(self):
         # add all tile rasters
         count = tileindexutil.tileindexutil.addAllTiles( self.iface.activeLayer() )
-
 
     # adds slected tiles
     def run_show_preview(self):

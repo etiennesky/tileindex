@@ -61,23 +61,25 @@ class PixmapFillSymbolLayer(QgsFillSymbolLayerV2):
 
         # draw pixmap
         if self.pixmap is not None and not self.pixmap.isNull():
+            if QGis.QGIS_VERSION_INT >= 10900:
 
-            # compute boundingBox of feature, in case it falls outside of current extent
-            ct = iface.mapCanvas().getCoordinateTransform()
-            bbox = context.feature().geometry().boundingBox()
-            bbox = QgsRectangle(ct.transform(QgsPoint(bbox.xMinimum(),bbox.yMaximum())), \
-                                  ct.transform(QgsPoint(bbox.xMaximum(),bbox.yMinimum())))
-            bbox = QRect(bbox.xMinimum(),bbox.yMinimum(),bbox.width(),bbox.height())
+                # compute boundingBox of feature, in case it falls outside of current extent
+                ct = iface.mapCanvas().getCoordinateTransform()
+                bbox = context.feature().geometry().boundingBox()
+                bbox = QgsRectangle(ct.transform(QgsPoint(bbox.xMinimum(),bbox.yMaximum())), \
+                                      ct.transform(QgsPoint(bbox.xMaximum(),bbox.yMinimum())))
+                bbox = QRect(bbox.xMinimum(),bbox.yMinimum(),bbox.width(),bbox.height())
+                
+                painter.drawPixmap(bbox,self.pixmap)
+            else:
+                painter.drawPixmap(points.boundingRect().toRect(),self.pixmap)
 
-            #painter.drawPixmap(points.boundingRect().toRect(),self.pixmap)
-            painter.drawPixmap(bbox,self.pixmap)
-            
         # draw border (selection color if selected)
         backupPen = painter.pen()
         pen = QPen()
         pen.setWidth(2)
         if context.selected():
-            pen.setColor(context.selectionColor())
+            pen.setColor(context.renderContext().selectionColor())
         painter.setPen(pen)
 
         painter.drawPolygon(points)
@@ -123,6 +125,7 @@ class TileIndexRenderer(QgsFeatureRendererV2):
             self.layerPath = None
 
         # get attribute where filename is stored
+        self.attrStr = None
         if attrId is None or attrStr is None:
             (self.attrId, self.attrStr) = tileindexutil.tileindexutil.checkLayerAttribute(layer, False)
         else:

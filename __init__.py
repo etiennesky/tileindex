@@ -25,9 +25,9 @@ def name():
 def description():
     return "shows a preview of MapServer tile index rasters and allows to open raster layers"
 def version():
-    return "Version 0.2"
+    return "Version 0.3"
 def icon():
-    return "icon.png"
+    return "icon/icon.png"
 def qgisMinimumVersion():
     return "1.0"
 def author():
