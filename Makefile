@@ -33,7 +33,7 @@ PLUGINNAME = tileindex
 
 PY_FILES = tileindex.py tileindexdialog.py __init__.py tileindexutil.py tileindexfillsymbollayer.py
 
-EXTRAS = icon/icon.png metadata.txt
+EXTRAS = icon/icon.png metadata.txt Makefile make.bat
 
 UI_FILES = ui_tileindex.py ui_tileindexrenderwidgetbase.py
 
