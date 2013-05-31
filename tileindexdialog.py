@@ -34,11 +34,11 @@ class TileIndexDialog(QtGui.QDialog):
         self.ui.setupUi(self)
 
         s = QSettings()
-        self.ui.spinBoxWidth.setValue(s.value('TileIndexPlugin/previewWidth', 1000).toInt()[0])
-        self.ui.checkBoxContext.setChecked(s.value('TileIndexPlugin/contextMenu', True).toBool())
-        self.ui.checkBoxTransparent.setChecked(s.value('TileIndexPlugin/transparentFix', True).toBool())
-        self.ui.groupBoxAttribute.setChecked(s.value('TileIndexPlugin/attribute', False).toBool())
-        self.ui.lineEditAttribute.setText(s.value('TileIndexPlugin/attributeStr', '').toString())
+        self.ui.spinBoxWidth.setValue(s.value('TileIndexPlugin/previewWidth', 1000, type=int))
+        self.ui.checkBoxContext.setChecked(s.value('TileIndexPlugin/contextMenu', True, type=bool))
+        self.ui.checkBoxTransparent.setChecked(s.value('TileIndexPlugin/transparentFix', True, type=bool))
+        self.ui.groupBoxAttribute.setChecked(s.value('TileIndexPlugin/attribute', False, type=bool))
+        self.ui.lineEditAttribute.setText(s.value('TileIndexPlugin/attributeStr', '', type=str))
 
     def accept(self):
         s = QSettings()

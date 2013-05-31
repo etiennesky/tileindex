@@ -96,7 +96,7 @@ class PixmapFillSymbolLayerMetadata(QgsSymbolLayerV2AbstractMetadata):
     QgsSymbolLayerV2AbstractMetadata.__init__(self, "TileIndexFill", "Tile Index Fill", QgsSymbolV2.Fill)
 
   def createSymbolLayer(self, props):
-      path = str(props[QString("path")]) if QString("path") in props else ""
+      path = str(props["path"]) if "path" in props else ""
       return PixmapFillSymbolLayer(path,width)
 
   def createSymbolLayerWidget(self):
@@ -159,20 +159,20 @@ class TileIndexRenderer(QgsFeatureRendererV2):
         # get fileName for feature
         if QGis.QGIS_VERSION_INT >= 10900:
             # this has not been tested when attribute is missing, but shouldn't get here anyway
-            fileName = feature.attribute(self.attrStr)
-            if fileName == QVariant():
+            fileName = feature[self.attrStr]
+            if fileName == '':
                 return self.defaultSymbol
-            fileName = fileName.toString()
+            fileName = fileName
         else:
             attrMap = feature.attributeMap()
             if not self.attrId in attrMap:
                 return self.defaultSymbol
-            fileName = attrMap[self.attrId].toString()
+            fileName = attrMap[self.attrId]
         if QFileInfo(fileName).isRelative():
             if self.layerPath is None:
                 print("TileIndex plugin : tile has relative path %s but tileindex path is unknown..." % fileName)
                 return self.defaultSymbol
-            fileName = QString(self.layerPath + QDir.separator() + fileName) 
+            fileName = self.layerPath + QDir.separator() + fileName
         if not QFileInfo(fileName).isFile():
             print("TileIndex plugin : got invalid raster %s for feature #%d, attribute %s" % (fileName,feature.id(),self.attrStr))
             return self.defaultSymbol
