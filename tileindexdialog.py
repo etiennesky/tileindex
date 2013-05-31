@@ -21,7 +21,7 @@
 """
 
 from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import QSettings, QVariant
+from PyQt4.QtCore import QSettings
 
 from ui_tileindex import Ui_TileIndex
 
@@ -42,7 +42,7 @@ class TileIndexDialog(QtGui.QDialog):
 
     def accept(self):
         s = QSettings()
-        s.setValue('TileIndexPlugin/previewWidth', QVariant(self.ui.spinBoxWidth.value()))
+        s.setValue('TileIndexPlugin/previewWidth', self.ui.spinBoxWidth.value())
         if not self.ui.checkBoxContext.isChecked():
             s.setValue('TileIndexPlugin/contextMenu', False)
         else:
@@ -57,7 +57,7 @@ class TileIndexDialog(QtGui.QDialog):
             s.setValue('TileIndexPlugin/attribute', False)
         attrStr = self.ui.lineEditAttribute.text()
         if not attrStr.isNull():
-            s.setValue('TileIndexPlugin/attributeStr', QVariant(attrStr))
+            s.setValue('TileIndexPlugin/attributeStr', attrStr)
         else:
             s.remove('TileIndexPlugin/attributeStr')
         QtGui.QDialog.accept(self)
