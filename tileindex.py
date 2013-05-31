@@ -63,13 +63,13 @@ class TileIndex(QObject):
     def initGui(self):
         # Create action that will start plugin configuration
         self.action_dlg = QAction(QIcon(":/plugins/tileindex/icon/settings.png"), \
-                                  u"Preferences", self.iface.mainWindow())
+                                      self.tr("Preferences"), self.iface.mainWindow())
         self.action_add_sel_tiles = QAction(QIcon(":/plugins/tileindex/icon/mActionAddImage.png"), \
-                                            u"Add selected tile raster layer(s)", self.iface.mainWindow())
+                                                self.tr("Add selected tile raster layer(s)"), self.iface.mainWindow())
         self.action_add_all_tiles = QAction(QIcon(":/plugins/tileindex/icon/mActionAddRasterLayer.png"), \
-                                            u"Add all tile raster layer(s)", self.iface.mainWindow())
+                                                self.tr("Add all tile raster layer(s)"), self.iface.mainWindow())
         self.action_show_preview = QAction(QIcon(":/plugins/tileindex/icon/mActionMapTips.png"), \
-                                           u"Show tile previews in map", self.iface.mainWindow())
+                                               self.tr("Show tile previews in map"), self.iface.mainWindow())
         # connect the action to the run method
         QObject.connect(self.action_dlg, SIGNAL("triggered()"), self.run_dlg)
         QObject.connect(self.action_add_sel_tiles, SIGNAL("triggered()"), self.run_add_sel_tiles)

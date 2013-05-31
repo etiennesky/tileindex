@@ -166,7 +166,7 @@ class TileIndexUtil(QObject):
     def addTiles(self, layer, files):
         count = 0
         for fileName in files:
-            print("TileIndex plugin : loading raster file %s" % fileName)           
+            print("TileIndex plugin : adding raster file %s" % fileName)           
             fileInfo = QFileInfo(fileName)
             rlayer = QgsRasterLayer(fileName, fileInfo.baseName())
             if rlayer is None:
@@ -233,9 +233,9 @@ class TileIndexUtil(QObject):
                 str3 = self.tr("Add all tile raster layer(s)")
                 str2 = self.tr("Show tile previews in map")
                 if len(layer.selectedFeatures()) != 0: 
-                    myMenu.addAction(str1)
-                myMenu.addAction(str3)
-                myMenu.addAction(str2)
+                    myMenu.addAction(QIcon(":/plugins/tileindex/icon/mActionAddImage.png"),str1)
+                myMenu.addAction(QIcon(":/plugins/tileindex/icon/mActionAddRasterLayer.png"),str3)
+                myMenu.addAction(QIcon(":/plugins/tileindex/icon/mActionMapTips.png"),str2)
                 selectedAction = myMenu.exec_(globalPos)
                 if selectedAction:
                     if selectedAction.text() == str1:
