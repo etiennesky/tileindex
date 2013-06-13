@@ -20,22 +20,6 @@
  ***************************************************************************/
  This script initializes the plugin, making it known to QGIS.
 """
-def name():
-    return "Tile Index Viewer"
-def description():
-    return "shows a preview of MapServer tile index rasters and allows to open raster layers"
-def version():
-    return "Version 0.3"
-def icon():
-    return "icon/icon.png"
-def qgisMinimumVersion():
-    return "1.0"
-def author():
-  return "Etienne Tourigny"
-def author():
-  return "Etienne Tourigny"
-def email():
-  return "etourigny.dev@gmail.com"
 def classFactory(iface):
     # load TileIndex class from file TileIndex
     from tileindex import TileIndex
