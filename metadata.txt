@@ -39,7 +39,3 @@ experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version
 deprecated=False
-
-# Author contact information
-author=Etienne Tourigny
-email=etienne.dev at gmail dot com
