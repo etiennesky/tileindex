@@ -166,6 +166,10 @@ class TileIndexUtil(QObject):
     def addTiles(self, layer, files):
         count = 0
         layers = []
+
+        QApplication.setOverrideCursor( Qt.WaitCursor )       
+        iface.mapCanvas().freeze(True)
+
         for fileName in files:
             print("TileIndex plugin : loading raster file %s" % fileName)           
             fileInfo = QFileInfo(fileName)
@@ -175,10 +179,8 @@ class TileIndexUtil(QObject):
                 continue
             layers.append(rlayer)
             count = count + 1
-            qApp.processEvents()
+
         print("TileIndex plugin : adding %d layers to map registry" % count) 
-        QApplication.setOverrideCursor( Qt.WaitCursor )       
-        iface.mapCanvas().freeze(True)
         QgsMapLayerRegistry.instance().addMapLayers(layers)
         iface.mapCanvas().freeze(False)
         iface.mapCanvas().refresh()
@@ -265,23 +267,40 @@ class TileIndexUtil(QObject):
         pixmap = None
         rlayer = None
 
-        if QFileInfo(fileName).isFile:
+        if not QFileInfo(fileName).isFile():
+            print("TileIndex plugin : raster %s is invalid" % fileName)
+            return None
+
+        # try to find layer in map registry or legend
+        for layer in iface.legendInterface().layers() + QgsMapLayerRegistry.instance().mapLayers().values():
+            #print(layer.name()+' - '+layer.publicSource())
+            if layer and layer.isValid() and \
+                    layer.type()==QgsMapLayer.RasterLayer and \
+                    layer.publicSource() == fileName :
+                rlayer = layer
+                print("TileIndex plugin : found raster %s in legend or registry" % fileName)
+                break
+
+        if not rlayer:
             print("TileIndex plugin : reading raster %s" % fileName)
             rlayer = QgsRasterLayer(fileName, QFileInfo(fileName).baseName())
-        if rlayer is None or not rlayer.isValid():
-                print("TileIndex plugin : raster %s is invalid" % fileName)
+
+        if not rlayer or not rlayer.isValid():
+            print("TileIndex plugin : raster %s is invalid" % fileName)
+            return None
+
+        #create pixmap from raster
+        size = QSize(width,width * float(rlayer.height())/float(rlayer.width()))
+        if ( QGis.QGIS_VERSION_INT >= 10900 ) and ( "previewAsPixmap" in dir(rlayer) ):
+            # with qgis >= 1.9 (master) set background as transparent
+            pixmap = rlayer.previewAsPixmap(size,Qt.transparent)
         else:
-            size = QSize(width,width * float(rlayer.height())/float(rlayer.width()))
-            if ( QGis.QGIS_VERSION_INT >= 10900 ) and ( "previewAsPixmap" in dir(rlayer) ):
-                # with qgis >= 1.9 (master) set background as transparent
-                pixmap = rlayer.previewAsPixmap(size,Qt.transparent)
-            else:
-                pixmap = QPixmap(size)
-                rlayer.thumbnailAsPixmap(pixmap)
-                # with qgis <= 1.8 add transparency where there are white pixels
-                if self.transparentFix:
-                    mask = pixmap.createMaskFromColor(QColor(255, 255, 255), Qt.MaskInColor)
-                    pixmap.setMask(mask)
+            pixmap = QPixmap(size)
+            rlayer.thumbnailAsPixmap(pixmap)
+            # with qgis <= 1.8 add transparency where there are white pixels
+            if self.transparentFix:
+                mask = pixmap.createMaskFromColor(QColor(255, 255, 255), Qt.MaskInColor)
+                pixmap.setMask(mask)
 
         return pixmap
 
