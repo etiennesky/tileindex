@@ -38,8 +38,8 @@ class PixmapFillSymbolLayer(QgsFillSymbolLayerV2):
         QgsFillSymbolLayerV2.__init__(self)
         self.path = path
         self.pixmap = pixmap
-        if self.pixmap is None:
-            self.pixmap = QPixmap()
+        #if self.pixmap is None:
+        #    self.pixmap = QPixmap()
 
     def layerType(self):
         return "TileIndexFill"
@@ -60,7 +60,7 @@ class PixmapFillSymbolLayer(QgsFillSymbolLayerV2):
         painter = context.renderContext().painter()    
 
         # draw pixmap
-        if self.pixmap is not None and not self.pixmap.isNull():
+        if self.pixmap and not self.pixmap.isNull():
             if QGis.QGIS_VERSION_INT >= 10900:
 
                 # compute boundingBox of feature, in case it falls outside of current extent
@@ -69,10 +69,17 @@ class PixmapFillSymbolLayer(QgsFillSymbolLayerV2):
                 bbox = QgsRectangle(ct.transform(QgsPoint(bbox.xMinimum(),bbox.yMaximum())), \
                                       ct.transform(QgsPoint(bbox.xMaximum(),bbox.yMinimum())))
                 bbox = QRect(bbox.xMinimum(),bbox.yMinimum(),bbox.width(),bbox.height())
-                
-                painter.drawPixmap(bbox,self.pixmap)
+                          
+                if isinstance(self.pixmap,QImage):
+                    painter.drawImage(bbox,self.pixmap)
+                else:
+                    painter.drawPixmap(bbox,self.pixmap)
+
             else:
-                painter.drawPixmap(points.boundingRect().toRect(),self.pixmap)
+                if isinstance(self.pixmap,QImage):
+                    painter.drawImage(points.boundingRect().toRect(),self.pixmap)
+                else:
+                    painter.drawPixmap(points.boundingRect().toRect(),self.pixmap)
 
         # draw border (selection color if selected)
         backupPen = painter.pen()

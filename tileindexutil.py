@@ -291,8 +291,15 @@ class TileIndexUtil(QObject):
 
         #create pixmap from raster
         size = QSize(width,width * float(rlayer.height())/float(rlayer.width()))
-        if ( QGis.QGIS_VERSION_INT >= 10900 ) and ( "previewAsPixmap" in dir(rlayer) ):
-            # with qgis >= 1.9 (master) set background as transparent
+        if ( QGis.QGIS_VERSION_INT >= 20300 ):
+            # with qgis >= 2.3 (master) use previewAsImage for MTR, and set background as transparent
+            if "previewAsImage" in dir(rlayer):
+                pixmap = rlayer.previewAsImage(size,Qt.transparent,QImage.Format_ARGB32_Premultiplied)
+            else:
+                print("TileIndex plugin : using qgis >= 2.3 but QgsRasterLayer::previewAsImage() is missing... upgrade QGIS" )
+                return None
+        elif ( QGis.QGIS_VERSION_INT >= 10900 ) and ( "previewAsPixmap" in dir(rlayer) ):
+            # with qgis >= 1.9 set background as transparent
             pixmap = rlayer.previewAsPixmap(size,Qt.transparent)
         else:
             pixmap = QPixmap(size)
