@@ -113,10 +113,10 @@ class PixmapFillSymbolLayerMetadata(QgsSymbolLayerV2AbstractMetadata):
 
 class TileIndexRenderer(QgsFeatureRendererV2):
 
-    def __init__(self, layer, width=0, attrId=None, attrStr=None, pixmaps=dict(), showLabels=True, clone=False):
+    def __init__(self, layer, width=0, attrId=None, attrStr=None, symbols=dict(), showLabels=True, clone=False):
         QgsFeatureRendererV2.__init__(self, "TileIndexRenderer")
 
-        self.symbolOk = True
+        self.symbolsOk = True
         self.showLabels = showLabels
 
         if width == 0:
@@ -140,7 +140,7 @@ class TileIndexRenderer(QgsFeatureRendererV2):
             self.attrStr = attrStr
         if self.attrId is None or self.attrId == -1:
             print("TileIndex plugin : location attribute not found")
-            self.symbolOk = False
+            self.symbolsOk = False
 
         # add label using old label interface when object is first created
         label = self.layer.label()
@@ -152,14 +152,12 @@ class TileIndexRenderer(QgsFeatureRendererV2):
             labelAttr.setSize(12, QgsLabelAttributes.PointUnits)
             self.layer.enableLabels(self.showLabels)
 
-        # setup pixmap dict and symbols
-        self.pixmaps = pixmaps # map with key=fileName and value=pixmap
-        self.pixmapSymbol = QgsFillSymbolV2()
+        # setup symbols dict
+        self.symbols = symbols # map with key=fileName and value=symbol
         self.defaultSymbol = QgsSymbolV2.defaultSymbol(QGis.Polygon)
 
     def symbolForFeature(self, feature):
-
-        self.symbolOk = False
+        self.symbolsOk = False
         if self.layerPath is None:
             return self.defaultSymbol
 
@@ -185,33 +183,28 @@ class TileIndexRenderer(QgsFeatureRendererV2):
             return self.defaultSymbol
 
         # create pixmap if needed and add to pixmaps map
-        if fileName not in self.pixmaps:
-            self.pixmaps[fileName] = tileindexutil.tileindexutil.rasterThumbnail(fileName,self.width)
-        # add symbol layer to symbol
-        symbolLayer = PixmapFillSymbolLayer(fileName,self.pixmaps[fileName])    
-        self.pixmapSymbol.deleteSymbolLayer(0)        
-        self.pixmapSymbol.appendSymbolLayer(symbolLayer)
-
-        self.symbolOk = True
-        return self.pixmapSymbol
-
-    def startRender(self, context, vlayer):
-        if self.symbolOk:
-            self.pixmapSymbol.startRender(context)
+        if fileName not in self.symbols:
+            pixmap = tileindexutil.tileindexutil.rasterThumbnail(fileName,self.width)
+            # add symbol layer to symbol
+            symbolLayer = PixmapFillSymbolLayer(fileName,pixmap)    
+            pixmapSymbol = QgsFillSymbolV2()
+            pixmapSymbol.deleteSymbolLayer(0)        
+            pixmapSymbol.appendSymbolLayer(symbolLayer)
+            self.symbols[fileName] = pixmapSymbol
         else:
-            self.defaultSymbol.startRender(context)
-        pass
+            pixmapSymbol = self.symbols[fileName]
+
+        self.symbolsOk = True
+        return pixmapSymbol
+
+    # not sure these are used with MTR?
+    def startRender(self, context, vlayer):
+        for filename, symbol in self.symbols.iteritems():
+            symbol.startRender(context)
 
     def stopRender(self, context):
-        if self.symbolOk:
-            self.pixmapSymbol.stopRender(context)
-            if self.showLabels and not self.layer.hasLabelsEnabled():
-                self.layer.enableLabels(True)
-                self.layer.drawLabels(context)
-                self.layer.enableLabels(False)
-        else:
-            self.defaultSymbol.stopRender(context)
-        pass
+        for filename, symbol in self.symbols.iteritems():
+            symbol.stopRender(context)
     
     def usedAttributes(self):
         if self.attrStr is None:
@@ -219,21 +212,21 @@ class TileIndexRenderer(QgsFeatureRendererV2):
         return [ self.attrStr ]
   
     def clone(self):
-        return TileIndexRenderer(self.layer, self.width, self.attrId, self.attrStr, self.pixmaps, self.showLabels, True)
+        return TileIndexRenderer(self.layer, self.width, self.attrId, self.attrStr, self.symbols, self.showLabels, True)
 
     def setWidth(self,width):
         if self.width != width:
             self.width = width
-            self.pixmaps = []
+            self.symbols = dict()
 
     def setLocationAttribute(self,attrId,attrStr):
         if self.attrId != attrId and self.attrStr != attrStr:
             self.attrId = attrId
             self.attrStr = attrStr
-            self.pixmaps = []
+            self.symbols = dict()
 
 
-
+# TODO fix this to work if user select this renderer in properties dialog (after selecting other)
 class TileIndexRendererWidget(QgsRendererV2Widget,Ui_TileIndexRenderWidgetBase):
     def __init__(self, layer, style, renderer):
         QgsRendererV2Widget.__init__(self, layer, style)

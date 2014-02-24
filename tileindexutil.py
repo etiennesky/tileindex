@@ -273,7 +273,6 @@ class TileIndexUtil(QObject):
 
         # try to find layer in map registry or legend
         for layer in iface.legendInterface().layers() + QgsMapLayerRegistry.instance().mapLayers().values():
-            #print(layer.name()+' - '+layer.publicSource())
             if layer and layer.isValid() and \
                     layer.type()==QgsMapLayer.RasterLayer and \
                     layer.publicSource() == fileName :
