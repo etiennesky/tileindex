@@ -91,7 +91,7 @@ class TileIndexUtil(QObject):
                     fieldStr = provider.fields()[i].name()
                     break
             if fieldId == -1:
-                print("TileIndex plugin : did not find a location attribute in layer")                    
+                #print("TileIndex plugin : did not find a location attribute in layer")                    
                 return (-1,None)
 
             # make sure there is at least 1 selected tile (if requested)
@@ -165,15 +165,25 @@ class TileIndexUtil(QObject):
     # this method will add the given raster files to map registry
     def addTiles(self, layer, files):
         count = 0
+        layers = []
         for fileName in files:
-            print("TileIndex plugin : adding raster file %s" % fileName)           
+            print("TileIndex plugin : loading raster file %s" % fileName)           
             fileInfo = QFileInfo(fileName)
             rlayer = QgsRasterLayer(fileName, fileInfo.baseName())
             if rlayer is None:
                 print("TileIndex plugin : raster file %s could not be loaded..." % fileName)
                 continue
-            QgsMapLayerRegistry.instance().addMapLayer(rlayer)
+            layers.append(rlayer)
             count = count + 1
+            qApp.processEvents()
+        print("TileIndex plugin : adding %d layers to map registry" % count) 
+        QApplication.setOverrideCursor( Qt.WaitCursor )       
+        iface.mapCanvas().freeze(True)
+        QgsMapLayerRegistry.instance().addMapLayers(layers)
+        iface.mapCanvas().freeze(False)
+        iface.mapCanvas().refresh()
+        print("TileIndex plugin : done adding layers")
+        QApplication.restoreOverrideCursor()
                     
         # restore active layer if qgis >= 1.9
         if count > 0:
